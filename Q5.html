@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom, #87ceeb, #ffffff);
+        color: #333;
+      }
+      #weather-container {
+        margin: 20px auto;
+        padding: 20px;
+        max-width: 500px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      button {
+        margin: 10px 0;
+        padding: 10px;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Weather App</h1>
+    <div id="weather-container">
+      <input
+        type="text"
+        id="location-input"
+        placeholder="Enter location (optional)"
+      />
+      <button onclick="fetchWeather()">Get Weather</button>
+      <p id="status">Enter a location or allow location access.</p>
+      <div id="weather-data" style="display: none">
+        <h2 id="city-name"></h2>
+        <p><strong>Temperature:</strong> <span id="temperature"></span> °C</p>
+        <p><strong>Weather:</strong> <span id="description"></span></p>
+        <p><strong>Humidity:</strong> <span id="humidity"></span>%</p>
+        <p><strong>Wind Speed:</strong> <span id="wind"></span> m/s</p>
+      </div>
+    </div>
+    <script>
+      const apiKey = "YOUR_API_KEY_HERE"; // Replace with your OpenWeatherMap API key
+
+      async function fetchWeather() {
+        const locationInput = document.getElementById("location-input").value;
+        const status = document.getElementById("status");
+        const weatherData = document.getElementById("weather-data");
+        const cityName = document.getElementById("city-name");
+        const temperature = document.getElementById("temperature");
+        const description = document.getElementById("description");
+        const humidity = document.getElementById("humidity");
+        const wind = document.getElementById("wind");
+
+        weatherData.style.display = "none";
+        status.textContent = "Fetching weather data...";
+
+        let apiUrl = "";
+
+        if (locationInput) {
+          apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${locationInput}&units=metric&appid=${apiKey}`;
+        } else {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+                fetchAndDisplay(apiUrl);
+              },
+              () => {
+                status.textContent =
+                  "Unable to access your location. Please enter a location manually.";
+              }
+            );
+            return;
+          } else {
+            status.textContent =
+              "Geolocation is not supported by your browser.";
+            return;
+          }
+        }
+
+        fetchAndDisplay(apiUrl);
+      }
+
+      async function fetchAndDisplay(apiUrl) {
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) throw new Error("Failed to fetch weather data");
+          const data = await response.json();
+
+          document.getElementById("city-name").textContent = data.name;
+          document.getElementById("temperature").textContent = data.main.temp;
+          document.getElementById("description").textContent =
+            data.weather[0].description;
+          document.getElementById("humidity").textContent = data.main.humidity;
+          document.getElementById("wind").textContent = data.wind.speed;
+
+          document.getElementById("status").textContent = "";
+          document.getElementById("weather-data").style.display = "block";
+        } catch (error) {
+          document.getElementById("status").textContent =
+            "Error fetching weather data. Please try again.";
+        }
+      }
+    </script>
+  </body>
+</html>
